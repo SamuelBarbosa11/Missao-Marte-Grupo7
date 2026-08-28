@@ -22,11 +22,11 @@ public class Missao {
         return nave;
     }
 
-    public java.util.List<Passageiro> getPassageiros() {
+    public List<Passageiro> getPassageiros() {
         return passageiros;
     }
 
-    public java.util.List<Asteroide> getAsteroides() {
+    public List<Asteroide> getAsteroides() {
         return asteroides;
     }
 
@@ -51,6 +51,19 @@ public class Missao {
             if (a.colideCom(nave)) return true;
         }
         return false;
+    }
+
+    /**
+     * Processa uma colisão: reduz uma vida da nave, reposiciona a nave no centro
+     * do mapa e retorna true se a colisão foi registrada.
+     */
+    public boolean processarColisao() {
+        if (!verificaColisao()) {
+            return false;
+        }
+        nave.perderVida();
+        nave.resetarPosicao();
+        return true;
     }
 
     /**

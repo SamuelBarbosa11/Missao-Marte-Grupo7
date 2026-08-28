@@ -13,6 +13,23 @@
 
 ## Compilar e executar (terminal)
 
+### Forma mais fácil de rodar (recomendada)
+
+No Windows, na raiz do projeto, basta executar:
+
+```cmd
+run start
+```
+
+Esses scripts já fazem a configuração do terminal em UTF-8 e executam automaticamente:
+
+```cmd
+javac -g -d out src/missao/*.java
+java -cp out missao.Main
+```
+
+### Ou o jeito tradicional
+
 - Compilar com informação de debug:
 
 ```bash
