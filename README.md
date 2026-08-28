@@ -16,7 +16,21 @@ Conteúdo:
 
 - `src/missao` — código fonte Java (classes: `Nave`, `Passageiro`, `Professor`, `Engenheiro`, `Asteroide`, `Missao`, `Main`).
 
-Compilar e executar (a partir da raiz do repositório):
+Forma mais fácil de rodar (recomendada):
+
+No Windows, na raiz do projeto, execute:
+
+```cmd
+run start
+```
+
+Esses arquivos fazem automaticamente:
+
+- `chcp 65001` para configurar UTF-8 no terminal
+- `javac -g -d out src/missao/*.java`
+- `java -cp out missao.Main`
+
+Comandos tradicionais (manual):
 
 ```bash
 javac -g -d out src/missao/*.java

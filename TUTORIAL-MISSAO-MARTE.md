@@ -75,12 +75,27 @@ java missao.Main
 3. Gero arquivos `.class`
 4. Executo com `java`
 
-### Exemplo de compilação e execução
+### Forma mais fácil de rodar (recomendada)
+
+No Windows, na raiz do projeto, basta executar:
+
+```cmd
+run start
+```
+
+Esses scripts já fazem a configuração do terminal em UTF-8 e executam automaticamente:
+
+```cmd
+javac -g -d out src/missao/*.java
+java -cp out missao.Main
+```
+
+### Exemplo de compilação e execução manual
 
 No terminal:
 
 ```bash
-javac -d out missaoMarteUnifor/oo-console/src/missao/*.java
+javac -g -d out src/missao/*.java
 java -cp out missao.Main
 ```
 

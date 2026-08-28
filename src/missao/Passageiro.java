@@ -24,4 +24,12 @@ public class Passageiro {
     public int getX() { return x; }
 
     public int getY() { return y; }
+
+    /**
+     * Pontuação concedida ao embarque. A implementação padrão vale 0 e as
+     * subclasses sobrescrevem esse comportamento para valor polimórfico.
+     */
+    public int getPontuacaoEmbarque() {
+        return 0;
+    }
 }
