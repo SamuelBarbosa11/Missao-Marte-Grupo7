@@ -1,3 +1,12 @@
+Grupo 07:
+- Samuel Miguel Barbosa - 2517428
+- João Gabriel Rinaldi - 2510365
+- Rafael - 2517979
+
+repositório git: https://github.com/SamuelBarbosa11/Missao-Marte-Grupo7.git
+
+<br>
+
 Missão Marte — Exemplo OO (console)
 =====================================
 
