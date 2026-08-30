@@ -27,13 +27,13 @@ run start
 Esses arquivos fazem automaticamente:
 
 - `chcp 65001` para configurar UTF-8 no terminal
-- `javac -g -d out src/missao/*.java`
+- `javac -g -encoding UTF-8 -d out src/missao/*.java`
 - `java -cp out missao.Main`
 
 Comandos tradicionais (manual):
 
 ```bash
-javac -g -d out src/missao/*.java
+javac -g -encoding UTF-8 -d out src/missao/*.java
 java -cp out missao.Main
 ```
 
@@ -64,6 +64,7 @@ Descrição rápida do jogo em console:
 Observações e recomendações:
 
 - Compile sempre com `-g` para obter informações de depuração (linhas/variáveis).
+- Compile sempre com `-encoding UTF-8`. Os símbolos do mapa são emojis, e sem essa flag o `javac` assume o code page do Windows (`windows-1252` em português) e falha com `unmappable character`. No JDK 18 ou superior o padrão já é UTF-8 e o erro não aparece, mas a flag garante que o projeto também compile no JDK 17.
 - O ranking é salvo em `ranking.json` no diretório de trabalho. Se quiser ignorar esse arquivo no Git, adicione-o ao `.gitignore` e remova do índice com:
 
 ```bash
@@ -76,7 +77,7 @@ Para detalhes sobre como debugar com VS Code e configurações recomendadas, vej
 Para documentação do código e recursos úteis, veja os links abaixo:
 
 - Javadoc (HTML gerado): [docs/index.html](docs/index.html)
-- Documentação explicativa: [DOCUMENTACAO-CODIGO.md](DOCUMENTACAO-CODIGO.md)
+- Tutorial da atividade: [TUTORIAL-MISSAO-MARTE.md](TUTORIAL-MISSAO-MARTE.md)
 - Guia de depuração no VS Code: [VSCODE-JAVA-DEBUG.md](VSCODE-JAVA-DEBUG.md)
 - Código-fonte: [src/missao](src/missao)
 

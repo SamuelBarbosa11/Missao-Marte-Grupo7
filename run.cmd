@@ -2,7 +2,7 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 
-javac -g -d out src/missao/*.java
+javac -g -encoding UTF-8 -d out src/missao/*.java
 if errorlevel 1 (
     echo.
     echo Falha na compilacao do projeto.
