@@ -361,13 +361,18 @@ public class Main {
   private static void printRanking(List<RankingEntry> ranking) {
     int position = 1;
     for (RankingEntry entry : ranking) {
+      // entrada gravada no formato antigo não tem data; omite em vez de
+      // imprimir a vírgula seguida de nada
+      String data = entry.getDataHora().isEmpty()
+        ? ""
+        : ", " + entry.getDataHora();
       System.out.printf(
-        "%d. %s - %d pontos (%d resgatados, %s)%n",
+        "%d. %s - %d pontos (%d resgatados%s)%n",
         position++,
         entry.getNome(),
         entry.getPontuacao(),
         entry.getResgatados(),
-        entry.getDataHora()
+        data
       );
     }
   }
