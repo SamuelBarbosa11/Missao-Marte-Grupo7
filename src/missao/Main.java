@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
  * pontuação e persistência do ranking em `ranking.json`.
  */
 public class Main {
+
   /**
    * Ponto de entrada da aplicação.
    * <p>
@@ -43,16 +44,17 @@ public class Main {
     System.out.println("3 - Resetar Ranking");
     System.out.println("4 - Sair");
     System.out.print("Escolha uma opção: ");
-  } 
+  }
+
   //função jogar, que contém a lógica principal do jogo
-  private static void jogar(
+  private static List<RankingEntry> jogar(
     Scanner scanner,
     Random random,
     Path rankingPath,
     List<RankingEntry> ranking,
     String pilotoNome
-) {
-  int tamanhoMapa;
+  ) {
+    int tamanhoMapa;
     while (true) {
       System.out.print(
         "Digite a dimensão do mapa (mínimo 4, máximo 10; ex.: 5 = faixa de -5 a 5): "
@@ -257,54 +259,60 @@ public class Main {
         }
 
         if (missao.todosEmbarcados()) {
-              if (missao.getNave().getX() == 0
-              && missao.getNave().getY() == 0) {
+          System.out.println("🛰️ Todos os passageiros resgatados!");
+          System.out.println(
+            "🛰️ Vá para as coordenadas (0, 0) para terminar a missão."
+          );
 
-            System.out.println("🛬 Todos os passageiros resgatados!");
-            System.out.println("🛬 Nave na plataforma de pouso!");
-            System.out.println("🚀 MISSÃO CONCLUÍDA!"); 
-            
+          if (missao.getNave().getX() == 0 && missao.getNave().getY() == 0) {
+            System.out.println();
+            System.out.println("🚀 Nave na plataforma de pouso!");
+            System.out.println("🚀 MISSÃO CONCLUÍDA!");
+
             // Codigo pra finalizar a partida
             System.out.printf("Pontuação final: %d\n", score);
 
             if (score > 0) {
-            RankingEntry nova = new RankingEntry(
-              pilotoNome,
-              score,
-              LocalDateTime
-                .now()
-                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")),
-              nave.getPassageiros().size(),
-              dificuldade
-            );
-            List<RankingEntry> atualizado = registrarPartida(ranking, nova);
-            // contains usa identidade: a entrada nova só continua na lista se
-            // de fato sobreviveu ao corte dos cinco melhores da dificuldade
-            if (atualizado.contains(nova)) {
-              ranking = atualizado;
-              saveRanking(rankingPath, ranking);
-
-              System.out.println(
-                "Novo ranking salvo! Você está entre os 5 melhores desta dificuldade."
+              RankingEntry nova = new RankingEntry(
+                pilotoNome,
+                score,
+                LocalDateTime.now().format(
+                  DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                ),
+                nave.getPassageiros().size(),
+                dificuldade
               );
-            }
-          }
+              List<RankingEntry> atualizado = registrarPartida(ranking, nova);
+              // contains usa identidade: a entrada nova só continua na lista se
+              // de fato sobreviveu ao corte dos cinco melhores da dificuldade
+              if (atualizado.contains(nova)) {
+                ranking = atualizado;
+                saveRanking(rankingPath, ranking);
 
-          break;
-              } else {
-                System.out.println("Todos os passageiros foram resgatados!");
-                System.out.println("Agora leve a nave até a plataforma L em (0,0).");
+                System.out.println(
+                  "Novo ranking salvo! Você está entre os 5 melhores desta dificuldade."
+                );
               }
-          }
+            }
 
-      List<RankingEntry> topFinal = topDaDificuldade(ranking, dificuldade);
-      if (!topFinal.isEmpty()) {
-        System.out.println();
-        System.out.printf("Ranking Top 5 — %s:%n", dificuldade.getNome());
-        printRanking(topFinal);
-      } else {
-        System.out.println();
-        System.out.println("Ranking vazio. Seja o primeiro a marcar pontos!");
+            break;
+          } else {
+            System.out.println("Todos os passageiros foram resgatados!");
+            System.out.println(
+              "Agora leve a nave até a plataforma L em (0,0)."
+            );
+          }
+        }
+
+        List<RankingEntry> topFinal = topDaDificuldade(ranking, dificuldade);
+        if (!topFinal.isEmpty()) {
+          System.out.println();
+          System.out.printf("Ranking Top 5 — %s:%n", dificuldade.getNome());
+          printRanking(topFinal);
+        } else {
+          System.out.println();
+          System.out.println("Ranking vazio. Seja o primeiro a marcar pontos!");
+        }
       }
 
       System.out.print("Deseja iniciar nova missão? (s/n): ");
@@ -315,8 +323,9 @@ public class Main {
         playAgain = false;
       }
     }
+    return ranking;
   }
-}
+
   //função que reseta o ranking, apagando o conteúdo do arquivo ranking.json
   private static void resetarRanking(Path rankingPath) {
     try {
@@ -326,6 +335,7 @@ public class Main {
       System.out.println("Falha ao resetar o ranking: " + e.getMessage());
     }
   }
+
   public static void main(String[] args) {
     // Gerador aleatório usado para posicionar passageiros e asteroides
     Random random = new Random();
@@ -351,23 +361,20 @@ public class Main {
       scanner.nextLine(); // Limpa o buffer do scanner
       switch (opcao) {
         case 1:
-          jogar(scanner, random, rankingPath, ranking, pilotoNome);
+          ranking = jogar(scanner, random, rankingPath, ranking, pilotoNome);
           break;
-          
         case 2:
-        System.out.println();
-        System.out.println("========== RANKING ==========");
+          ranking = loadRanking(rankingPath);
+          System.out.println();
+          System.out.println("========== RANKING ==========");
 
-        if (ranking.isEmpty()) {
-        System.out.println("Nenhuma partida registrada.");
-        } else {
-          for (RankingEntry entrada : ranking) {
-            System.out.println(entrada);
+          if (ranking.isEmpty()) {
+            System.out.println("Nenhuma partida registrada.");
+          } else {
+            printRanking(ranking);
           }
-        }
-      System.out.println("=============================");
-      break;
-
+          System.out.println("=============================");
+          break;
         case 3:
           resetarRanking(rankingPath);
           ranking = loadRanking(rankingPath); // Recarrega o ranking após resetar
@@ -380,7 +387,7 @@ public class Main {
           System.out.println("Opção inválida. Tente novamente.");
       }
     }
-    
+
     scanner.close();
     System.out.println("Fim da execução.");
   }
@@ -394,7 +401,7 @@ public class Main {
    * @param scanner leitor de entradas do console
    * @return `Dificuldade` escolhida
    */
-  
+
   private static Dificuldade selecionarDificuldade(Scanner scanner) {
     while (true) {
       System.out.println("Escolha a dificuldade:");
@@ -510,9 +517,7 @@ public class Main {
       .stream()
       .filter(e -> e.getDificuldade() == dificuldade)
       .sorted(
-        Comparator
-          .comparingInt((RankingEntry e) -> e.getPontuacao())
-          .reversed()
+        Comparator.comparingInt((RankingEntry e) -> e.getPontuacao()).reversed()
       )
       .limit(5)
       .collect(Collectors.toList());
@@ -628,9 +633,17 @@ public class Main {
    */
   private static String simboloCompativel(String emoji, String fallback) {
     String charset = Charset.defaultCharset().name().toLowerCase(Locale.ROOT);
-    String stdoutCharset = System.getProperty("sun.stdout.encoding", "").toLowerCase(Locale.ROOT);
-    String lang = System.getenv().getOrDefault("LANG", "").toLowerCase(Locale.ROOT);
-    boolean utfSuportado = charset.contains("utf") || stdoutCharset.contains("utf") || lang.contains("utf");
+    String stdoutCharset = System.getProperty(
+      "sun.stdout.encoding",
+      ""
+    ).toLowerCase(Locale.ROOT);
+    String lang = System.getenv()
+      .getOrDefault("LANG", "")
+      .toLowerCase(Locale.ROOT);
+    boolean utfSuportado =
+      charset.contains("utf") ||
+      stdoutCharset.contains("utf") ||
+      lang.contains("utf");
     return utfSuportado ? emoji : fallback;
   }
 
@@ -658,7 +671,7 @@ public class Main {
     String naveIcone = simboloCompativel("🚀", "N");
     String professorIcone = simboloCompativel("🎓", "P");
     String engenheiroIcone = simboloCompativel("👷", "E");
-    String astronautaIcone = simboloCompativel("🔭", "A");
+    String astronautaIcone = simboloCompativel("🛰️", "A");
     String asteroideIcone = simboloCompativel("ㅤ☄️", "X");
     String inimigoIcone = simboloCompativel("👾", "I");
     String vazioIcone = simboloCompativel("·", ".");
@@ -689,7 +702,7 @@ public class Main {
         String symbol = vazioIcone;
         if (missao.getNave().getX() == x && missao.getNave().getY() == y) {
           symbol = naveIcone;
-        } else if (x == 0 && y == 0){
+        } else if (x == 0 && y == 0) {
           symbol = pousoIcone;
         } else {
           // obstáculo é desenhado antes do passageiro: representa perigo e não

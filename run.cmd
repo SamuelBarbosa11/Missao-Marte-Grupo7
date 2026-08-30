@@ -9,5 +9,5 @@ if errorlevel 1 (
     exit /b %errorlevel%
 )
 
-java -cp out missao.Main
+java -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -cp out missao.Main
 exit /b %errorlevel%
