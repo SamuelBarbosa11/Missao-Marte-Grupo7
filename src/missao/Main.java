@@ -259,11 +259,6 @@ public class Main {
         }
 
         if (missao.todosEmbarcados()) {
-          System.out.println("🛰️ Todos os passageiros resgatados!");
-          System.out.println(
-            "🛰️ Vá para as coordenadas (0, 0) para terminar a missão."
-          );
-
           if (missao.getNave().getX() == 0 && missao.getNave().getY() == 0) {
             System.out.println();
             System.out.println("🚀 Nave na plataforma de pouso!");
@@ -289,30 +284,29 @@ public class Main {
                 ranking = atualizado;
                 saveRanking(rankingPath, ranking);
 
-                System.out.println(
-                  "Novo ranking salvo! Você está entre os 5 melhores desta dificuldade."
-                );
+                System.out.println("Novo ranking salvo!");
               }
             }
 
             break;
           } else {
-            System.out.println("Todos os passageiros foram resgatados!");
+            System.out.println("🛰️ ㅤTodos os passageiros resgatados!");
             System.out.println(
-              "Agora leve a nave até a plataforma L em (0,0)."
+              "🛰️ ㅤVá para as coordenadas (0, 0) para terminar a missão."
             );
           }
         }
+      }
 
-        List<RankingEntry> topFinal = topDaDificuldade(ranking, dificuldade);
-        if (!topFinal.isEmpty()) {
-          System.out.println();
-          System.out.printf("Ranking Top 5 — %s:%n", dificuldade.getNome());
-          printRanking(topFinal);
-        } else {
-          System.out.println();
-          System.out.println("Ranking vazio. Seja o primeiro a marcar pontos!");
-        }
+      List<RankingEntry> topFinal = topDaDificuldade(ranking, dificuldade);
+      if (!topFinal.isEmpty()) {
+        System.out.println();
+        System.out.printf("Ranking Top 5 — %s:%n", dificuldade.getNome());
+        printRanking(topFinal);
+        System.out.println();
+      } else {
+        System.out.println();
+        System.out.println("Ranking vazio. Seja o primeiro a marcar pontos!");
       }
 
       System.out.print("Deseja iniciar nova missão? (s/n): ");
@@ -671,7 +665,7 @@ public class Main {
     String naveIcone = simboloCompativel("🚀", "N");
     String professorIcone = simboloCompativel("🎓", "P");
     String engenheiroIcone = simboloCompativel("👷", "E");
-    String astronautaIcone = simboloCompativel("🛰️", "A");
+    String astronautaIcone = simboloCompativel("🔭", "A");
     String asteroideIcone = simboloCompativel("ㅤ☄️", "X");
     String inimigoIcone = simboloCompativel("👾", "I");
     String vazioIcone = simboloCompativel("·", ".");
