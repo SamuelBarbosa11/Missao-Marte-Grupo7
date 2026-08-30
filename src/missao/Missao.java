@@ -3,16 +3,17 @@ package missao;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 /**
- * Representa o estado da missão: nave, passageiros e asteroides.
+ * Representa o estado da missão: nave, passageiros e obstáculos.
  * Fornece operações para detectar colisões, localizar passageiros na posição
  * da nave e embarcar passageiros.
  */
 public class Missao {
     private Nave nave;
     private List<Passageiro> passageiros = new ArrayList<>();
-    private List<Asteroide> asteroides = new ArrayList<>();
+    private List<Obstaculo> obstaculos = new ArrayList<>();
 
     public Missao(Nave nave) {
         this.nave = nave;
@@ -26,8 +27,8 @@ public class Missao {
         return passageiros;
     }
 
-    public List<Asteroide> getAsteroides() {
-        return asteroides;
+    public List<Obstaculo> getObstaculos() {
+        return obstaculos;
     }
 
     /**
@@ -38,19 +39,42 @@ public class Missao {
     public void addPassageiro(Passageiro p) { passageiros.add(p); }
 
     /**
-     * Adiciona um asteroide ao mapa da missão.
+     * Adiciona um obstáculo ao mapa da missão.
      *
-     * @param a asteroide a adicionar
+     * @param o obstáculo a adicionar
      */
-    public void addAsteroide(Asteroide a) { asteroides.add(a); }
+    public void addObstaculo(Obstaculo o) { obstaculos.add(o); }
+
+    /**
+     * Retorna o primeiro obstáculo encontrado na mesma posição da nave,
+     * ou `null` se não houver nenhum.
+     *
+     * @return `Obstaculo` na posição da nave ou `null`
+     */
+    public Obstaculo obstaculoNaPosicao() {
+        // Percorre todos os obstáculos e devolve o que coincidir com a posição
+        // da nave. Uso de método em Obstaculo encapsula a checagem.
+        for (Obstaculo o : obstaculos) {
+            if (o.colideCom(nave)) return o;
+        }
+        return null;
+    }
 
     public boolean verificaColisao() {
-        // Percorre todos os asteroides e verifica se algum coincide com a
-        // posição da nave. Uso de método em Asteroide encapsula a checagem.
-        for (Asteroide a : asteroides) {
-            if (a.colideCom(nave)) return true;
+        // Reaproveita a busca do obstáculo para não repetir o laço de colisão.
+        return obstaculoNaPosicao() != null;
+    }
+
+    /**
+     * Desloca os obstáculos móveis do mapa. Obstáculos estáticos ignoram a
+     * chamada, então o método pode ser invocado a cada turno sem verificação.
+     *
+     * @param random gerador aleatório reutilizável
+     */
+    public void moverInimigos(Random random) {
+        for (Obstaculo o : obstaculos) {
+            o.mover(random, nave.getLimite());
         }
-        return false;
     }
 
     /**

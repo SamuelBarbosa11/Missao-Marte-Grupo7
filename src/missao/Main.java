@@ -101,7 +101,7 @@ public class Main {
     System.out.println("Objetivo:");
     System.out.println(" - Mover a nave pelo mapa");
     System.out.println(" - Encontrar e embarcar todos os passageiros");
-    System.out.println(" - Evitar colisões com asteroides");
+    System.out.println(" - Evitar colisões com asteroides e inimigos");
     System.out.println(" - Manter a pontuação acima de zero");
     System.out.println();
     System.out.println("Comandos:");
@@ -149,22 +149,41 @@ public class Main {
         String line = scanner.nextLine().trim().toLowerCase();
         if (line.isEmpty()) continue;
         char cmd = line.charAt(0);
+        // marca se o jogador de fato agiu, para os inimigos ganharem um turno
+        boolean turnoConsumido = false;
         switch (cmd) {
           case 'w':
-            nave.moveUp();
-            score--;
+            // só desconta ponto se a nave realmente saiu do lugar
+            if (nave.moveUp()) {
+              score--;
+              turnoConsumido = true;
+            } else {
+              avisarLimite();
+            }
             break;
           case 's':
-            nave.moveDown();
-            score--;
+            if (nave.moveDown()) {
+              score--;
+              turnoConsumido = true;
+            } else {
+              avisarLimite();
+            }
             break;
           case 'a':
-            nave.moveLeft();
-            score--;
+            if (nave.moveLeft()) {
+              score--;
+              turnoConsumido = true;
+            } else {
+              avisarLimite();
+            }
             break;
           case 'd':
-            nave.moveRight();
-            score--;
+            if (nave.moveRight()) {
+              score--;
+              turnoConsumido = true;
+            } else {
+              avisarLimite();
+            }
             break;
           case 'c': {
             // Tenta embarcar um passageiro se houver um na posição atual
@@ -178,6 +197,7 @@ public class Main {
               if (ok) {
                 int valorEmbarque = p.getPontuacaoEmbarque();
                 score += valorEmbarque;
+                turnoConsumido = true;
                 System.out.printf(
                   "Passageiro embarcado. +%d pontos!%n",
                   valorEmbarque
@@ -195,10 +215,18 @@ public class Main {
             System.out.println("Comando desconhecido.");
         }
 
-        if (missao.verificaColisao()) {
+        // inimigos só andam quando o jogador de fato agiu no turno
+        if (turnoConsumido) {
+          missao.moverInimigos(random);
+        }
+
+        // guarda o obstáculo antes de processar, pois a colisão reposiciona a nave
+        Obstaculo obstaculo = missao.obstaculoNaPosicao();
+        if (obstaculo != null) {
           missao.processarColisao();
           System.out.printf(
-            "Colisão com asteroide! Você perdeu 1 vida. A nave foi reposicionada para (0,0). Vidas restantes: %d%n",
+            "Colisão com %s! Você perdeu 1 vida. A nave foi reposicionada para (0,0). Vidas restantes: %d%n",
+            obstaculo.getTipo(),
             nave.getVidas()
           );
           if (nave.getVidas() <= 0) {
@@ -261,6 +289,15 @@ public class Main {
   }
 
   /**
+   * Informa ao jogador que a nave tentou ultrapassar a borda do mapa.
+   */
+  private static void avisarLimite() {
+    System.out.println(
+      "Limite do mapa! A nave não pode sair da área de operação."
+    );
+  }
+
+  /**
    * Imprime o ranking formatado no console.
    *
    * @param ranking lista ordenada de `RankingEntry` a ser exibida
@@ -295,7 +332,8 @@ public class Main {
     int minY,
     int maxY
   ) {
-    Nave nave = new Nave("A-1", 4);
+    // o mapa é quadrado e simétrico, então maxX já é o limite em qualquer direção
+    Nave nave = new Nave("A-1", 4, 3, maxX);
     Missao missao = new Missao(nave);
 
     // Cria 4 passageiros em posições aleatórias dentro dos limites,
@@ -325,12 +363,22 @@ public class Main {
     }
 
     // Cria 2 asteroides em posições aleatórias sem colidir com a nave nem com passageiros
-    while (missao.getAsteroides().size() < 2) {
+    while (missao.getObstaculos().size() < 2) {
       int x = random.nextInt(maxX - minX + 1) + minX;
       int y = random.nextInt(maxY - minY + 1) + minY;
       if (x == nave.getX() && y == nave.getY()) continue;
       if (posicaoOcupada(missao, x, y)) continue;
-      missao.addAsteroide(new Asteroide(x, y));
+      missao.addObstaculo(new Asteroide(x, y));
+    }
+
+    // Cria 1 inimigo, que ao contrário do asteroide se desloca a cada turno.
+    // Os asteroides entram primeiro, então o tamanho da lista serve de contador.
+    while (missao.getObstaculos().size() < 3) {
+      int x = random.nextInt(maxX - minX + 1) + minX;
+      int y = random.nextInt(maxY - minY + 1) + minY;
+      if (x == nave.getX() && y == nave.getY()) continue;
+      if (posicaoOcupada(missao, x, y)) continue;
+      missao.addObstaculo(new Inimigo(x, y));
     }
 
     return missao;
@@ -338,7 +386,7 @@ public class Main {
 
   /**
    * Verifica se a posição (x,y) já está ocupada por qualquer entidade da
-   * missão (nave, passageiros ou asteroides).
+   * missão (nave, passageiros ou obstáculos).
    *
    * @param missao missão que contém entidades
    * @param x coordenada X
@@ -354,9 +402,9 @@ public class Main {
     for (Passageiro p : missao.getPassageiros()) {
       if (p.getX() == x && p.getY() == y) return true;
     }
-    // verifica cada asteroide
-    for (Asteroide a : missao.getAsteroides()) {
-      if (a.getX() == x && a.getY() == y) return true;
+    // verifica cada obstáculo
+    for (Obstaculo o : missao.getObstaculos()) {
+      if (o.getX() == x && o.getY() == y) return true;
     }
     // posição livre
     return false;
@@ -400,6 +448,7 @@ public class Main {
     String engenheiroIcone = simboloCompativel("👷", "E");
     String astronautaIcone = simboloCompativel("🔭", "A");
     String asteroideIcone = simboloCompativel("ㅤ☄️", "X");
+    String inimigoIcone = simboloCompativel("👾", "I");
     String vazioIcone = simboloCompativel("·", ".");
 
     System.out.println();
@@ -428,22 +477,29 @@ public class Main {
         if (missao.getNave().getX() == x && missao.getNave().getY() == y) {
           symbol = naveIcone;
         } else {
-          for (Passageiro p : missao.getPassageiros()) {
-            if (p.getX() == x && p.getY() == y) {
-              if (p instanceof Astronauta) {
-                symbol = astronautaIcone;
-              } else if (p instanceof Engenheiro) {
-                symbol = engenheiroIcone;
+          // obstáculo é desenhado antes do passageiro: representa perigo e não
+          // aparece em nenhuma outra parte da tela, então não pode ficar oculto.
+          // Passageiro coberto ainda é localizável pela lista de coordenadas.
+          for (Obstaculo o : missao.getObstaculos()) {
+            if (o.getX() == x && o.getY() == y) {
+              if (o instanceof Inimigo) {
+                symbol = inimigoIcone;
               } else {
-                symbol = professorIcone;
+                symbol = asteroideIcone;
               }
               break;
             }
           }
           if (vazioIcone.equals(symbol)) {
-            for (Asteroide a : missao.getAsteroides()) {
-              if (a.getX() == x && a.getY() == y) {
-                symbol = asteroideIcone;
+            for (Passageiro p : missao.getPassageiros()) {
+              if (p.getX() == x && p.getY() == y) {
+                if (p instanceof Astronauta) {
+                  symbol = astronautaIcone;
+                } else if (p instanceof Engenheiro) {
+                  symbol = engenheiroIcone;
+                } else {
+                  symbol = professorIcone;
+                }
                 break;
               }
             }
@@ -466,6 +522,8 @@ public class Main {
         "=Astronauta, " +
         asteroideIcone +
         "=Asteroide, " +
+        inimigoIcone +
+        "=Inimigo, " +
         vazioIcone +
         "=Vazio"
     );
