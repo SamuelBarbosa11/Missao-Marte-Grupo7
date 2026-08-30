@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
  * pontuação e persistência do ranking em `ranking.json`.
  */
 public class Main {
-
   /**
    * Ponto de entrada da aplicação.
    * <p>
@@ -32,24 +31,28 @@ public class Main {
    *
    * @param args argumentos de linha de comando (não utilizados)
    */
-  public static void main(String[] args) {
-    // Gerador aleatório usado para posicionar passageiros e asteroides
-    Random random = new Random();
 
-    // Caminho para o arquivo que persiste o ranking de pontuações
-    Path rankingPath = Paths.get("ranking.json");
-    // Carrega ranking existente (se houver) para exibir e possivelmente atualizar
-    List<RankingEntry> ranking = loadRanking(rankingPath);
-
-    // Scanner para leitura de entradas do usuário via console
-    Scanner scanner = new Scanner(System.in);
-    System.out.print("Digite o nome do piloto: ");
-    String pilotoNome = scanner.nextLine().trim();
-    if (pilotoNome.isEmpty()) {
-      pilotoNome = "Piloto Anônimo";
-    }
-
-    int tamanhoMapa;
+  //função que exibe o menu do jogo
+  private static void mostrarMenu() {
+    System.out.println();
+    System.out.println("================================");
+    System.out.println("       MISSÃO MARTE UNIFOR");
+    System.out.println("================================");
+    System.out.println("1 - Jogar");
+    System.out.println("2 - Ver Ranking");
+    System.out.println("3 - Resetar Ranking");
+    System.out.println("4 - Sair");
+    System.out.print("Escolha uma opção: ");
+  } 
+  //função jogar, que contém a lógica principal do jogo
+  private static void jogar(
+    Scanner scanner,
+    Random random,
+    Path rankingPath,
+    List<RankingEntry> ranking,
+    String pilotoNome
+) {
+  int tamanhoMapa;
     while (true) {
       System.out.print(
         "Digite a dimensão do mapa (mínimo 4, máximo 10; ex.: 5 = faixa de -5 a 5): "
@@ -254,12 +257,17 @@ public class Main {
         }
 
         if (missao.todosEmbarcados()) {
-          // Caso todos os passageiros tenham sido embarcados, a missão é concluída
-          System.out.println(
-            "Todos os passageiros embarcados! Missão concluída com sucesso."
-          );
-          System.out.printf("Pontuação final: %d\n", score);
-          if (score > 0) {
+              if (missao.getNave().getX() == 0
+              && missao.getNave().getY() == 0) {
+
+            System.out.println("🛬 Todos os passageiros resgatados!");
+            System.out.println("🛬 Nave na plataforma de pouso!");
+            System.out.println("🚀 MISSÃO CONCLUÍDA!"); 
+            
+            // Codigo pra finalizar a partida
+            System.out.printf("Pontuação final: %d\n", score);
+
+            if (score > 0) {
             RankingEntry nova = new RankingEntry(
               pilotoNome,
               score,
@@ -275,14 +283,19 @@ public class Main {
             if (atualizado.contains(nova)) {
               ranking = atualizado;
               saveRanking(rankingPath, ranking);
+
               System.out.println(
                 "Novo ranking salvo! Você está entre os 5 melhores desta dificuldade."
               );
             }
           }
+
           break;
-        }
-      }
+              } else {
+                System.out.println("Todos os passageiros foram resgatados!");
+                System.out.println("Agora leve a nave até a plataforma L em (0,0).");
+              }
+          }
 
       List<RankingEntry> topFinal = topDaDificuldade(ranking, dificuldade);
       if (!topFinal.isEmpty()) {
@@ -302,7 +315,72 @@ public class Main {
         playAgain = false;
       }
     }
+  }
+}
+  //função que reseta o ranking, apagando o conteúdo do arquivo ranking.json
+  private static void resetarRanking(Path rankingPath) {
+    try {
+      saveRanking(rankingPath, new ArrayList<>());
+      System.out.println("Ranking resetado com sucesso.");
+    } catch (Exception e) {
+      System.out.println("Falha ao resetar o ranking: " + e.getMessage());
+    }
+  }
+  public static void main(String[] args) {
+    // Gerador aleatório usado para posicionar passageiros e asteroides
+    Random random = new Random();
 
+    // Caminho para o arquivo que persiste o ranking de pontuações
+    Path rankingPath = Paths.get("ranking.json");
+    // Carrega ranking existente (se houver) para exibir e possivelmente atualizar
+    List<RankingEntry> ranking = loadRanking(rankingPath);
+
+    // Scanner para leitura de entradas do usuário via console
+    Scanner scanner = new Scanner(System.in);
+    System.out.print("Digite o nome do piloto: ");
+    String pilotoNome = scanner.nextLine().trim();
+    if (pilotoNome.isEmpty()) {
+      pilotoNome = "Piloto Anônimo";
+    }
+
+    //opções do menu
+    boolean executando = true;
+    while (executando) {
+      mostrarMenu();
+      int opcao = scanner.nextInt();
+      scanner.nextLine(); // Limpa o buffer do scanner
+      switch (opcao) {
+        case 1:
+          jogar(scanner, random, rankingPath, ranking, pilotoNome);
+          break;
+          
+        case 2:
+        System.out.println();
+        System.out.println("========== RANKING ==========");
+
+        if (ranking.isEmpty()) {
+        System.out.println("Nenhuma partida registrada.");
+        } else {
+          for (RankingEntry entrada : ranking) {
+            System.out.println(entrada);
+          }
+        }
+      System.out.println("=============================");
+      break;
+
+        case 3:
+          resetarRanking(rankingPath);
+          ranking = loadRanking(rankingPath); // Recarrega o ranking após resetar
+          break;
+        case 4:
+          System.out.println("Saindo do jogo. Até a próxima!");
+          executando = false;
+          break;
+        default:
+          System.out.println("Opção inválida. Tente novamente.");
+      }
+    }
+    
     scanner.close();
     System.out.println("Fim da execução.");
   }
@@ -316,6 +394,7 @@ public class Main {
    * @param scanner leitor de entradas do console
    * @return `Dificuldade` escolhida
    */
+  
   private static Dificuldade selecionarDificuldade(Scanner scanner) {
     while (true) {
       System.out.println("Escolha a dificuldade:");
@@ -583,6 +662,7 @@ public class Main {
     String asteroideIcone = simboloCompativel("ㅤ☄️", "X");
     String inimigoIcone = simboloCompativel("👾", "I");
     String vazioIcone = simboloCompativel("·", ".");
+    String pousoIcone = simboloCompativel(vazioIcone, "L");
 
     System.out.println();
     System.out.printf(
@@ -609,6 +689,8 @@ public class Main {
         String symbol = vazioIcone;
         if (missao.getNave().getX() == x && missao.getNave().getY() == y) {
           symbol = naveIcone;
+        } else if (x == 0 && y == 0){
+          symbol = pousoIcone;
         } else {
           // obstáculo é desenhado antes do passageiro: representa perigo e não
           // aparece em nenhuma outra parte da tela, então não pode ficar oculto.
