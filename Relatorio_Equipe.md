@@ -171,4 +171,18 @@ Ranking agora salva data/hora, passageiros resgatados e nível de dificuldade:
 
 ### • Menu Principal e Reset:
 
-![Menu Principal e Reset](prints/menu-principal-e-reset.png)
+- Opção 1:
+
+![Menu Principal e Reset](prints/menu_interativo/menu-1.png)
+
+- Opção 2:
+
+![Menu Principal e Reset](prints/menu_interativo/menu-2.png)
+
+- Opção 3:
+
+![Menu Principal e Reset](prints/menu_interativo/menu-3.png)
+
+- Opção 4:
+
+![Menu Principal e Reset](prints/menu_interativo/menu-4.png)
