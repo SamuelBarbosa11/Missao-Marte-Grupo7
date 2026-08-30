@@ -32,23 +32,28 @@ public class Main {
    *
    * @param args argumentos de linha de comando (não utilizados)
    */
-  public static void main(String[] args) {
-    // Gerador aleatório usado para posicionar passageiros e asteroides
-    Random random = new Random();
 
-    // Caminho para o arquivo que persiste o ranking de pontuações
-    Path rankingPath = Paths.get("ranking.json");
-    // Carrega ranking existente (se houver) para exibir e possivelmente atualizar
-    List<RankingEntry> ranking = loadRanking(rankingPath);
+  //função que exibe o menu do jogo
+  private static void mostrarMenu() {
+    System.out.println();
+    System.out.println("================================");
+    System.out.println("       MISSÃO MARTE UNIFOR");
+    System.out.println("================================");
+    System.out.println("1 - Jogar");
+    System.out.println("2 - Ver Ranking");
+    System.out.println("3 - Resetar Ranking");
+    System.out.println("4 - Sair");
+    System.out.print("Escolha uma opção: ");
+  }
 
-    // Scanner para leitura de entradas do usuário via console
-    Scanner scanner = new Scanner(System.in);
-    System.out.print("Digite o nome do piloto: ");
-    String pilotoNome = scanner.nextLine().trim();
-    if (pilotoNome.isEmpty()) {
-      pilotoNome = "Piloto Anônimo";
-    }
-
+  //função jogar, que contém a lógica principal do jogo
+  private static List<RankingEntry> jogar(
+    Scanner scanner,
+    Random random,
+    Path rankingPath,
+    List<RankingEntry> ranking,
+    String pilotoNome
+  ) {
     int tamanhoMapa;
     while (true) {
       System.out.print(
@@ -254,33 +259,42 @@ public class Main {
         }
 
         if (missao.todosEmbarcados()) {
-          // Caso todos os passageiros tenham sido embarcados, a missão é concluída
-          System.out.println(
-            "Todos os passageiros embarcados! Missão concluída com sucesso."
-          );
-          System.out.printf("Pontuação final: %d\n", score);
-          if (score > 0) {
-            RankingEntry nova = new RankingEntry(
-              pilotoNome,
-              score,
-              LocalDateTime
-                .now()
-                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")),
-              nave.getPassageiros().size(),
-              dificuldade
-            );
-            List<RankingEntry> atualizado = registrarPartida(ranking, nova);
-            // contains usa identidade: a entrada nova só continua na lista se
-            // de fato sobreviveu ao corte dos cinco melhores da dificuldade
-            if (atualizado.contains(nova)) {
-              ranking = atualizado;
-              saveRanking(rankingPath, ranking);
-              System.out.println(
-                "Novo ranking salvo! Você está entre os 5 melhores desta dificuldade."
+          if (missao.getNave().getX() == 0 && missao.getNave().getY() == 0) {
+            System.out.println();
+            System.out.println("🚀 Nave na plataforma de pouso!");
+            System.out.println("🚀 MISSÃO CONCLUÍDA!");
+
+            // Codigo pra finalizar a partida
+            System.out.printf("Pontuação final: %d\n", score);
+
+            if (score > 0) {
+              RankingEntry nova = new RankingEntry(
+                pilotoNome,
+                score,
+                LocalDateTime.now().format(
+                  DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                ),
+                nave.getPassageiros().size(),
+                dificuldade
               );
+              List<RankingEntry> atualizado = registrarPartida(ranking, nova);
+              // contains usa identidade: a entrada nova só continua na lista se
+              // de fato sobreviveu ao corte dos cinco melhores da dificuldade
+              if (atualizado.contains(nova)) {
+                ranking = atualizado;
+                saveRanking(rankingPath, ranking);
+
+                System.out.println("Novo ranking salvo!");
+              }
             }
+
+            break;
+          } else {
+            System.out.println("🛰️ ㅤTodos os passageiros resgatados!");
+            System.out.println(
+              "🛰️ ㅤVá para as coordenadas (0, 0) para terminar a missão."
+            );
           }
-          break;
         }
       }
 
@@ -289,6 +303,7 @@ public class Main {
         System.out.println();
         System.out.printf("Ranking Top 5 — %s:%n", dificuldade.getNome());
         printRanking(topFinal);
+        System.out.println();
       } else {
         System.out.println();
         System.out.println("Ranking vazio. Seja o primeiro a marcar pontos!");
@@ -300,6 +315,70 @@ public class Main {
         System.out.println("Preparando nova missão...");
       } else {
         playAgain = false;
+      }
+    }
+    return ranking;
+  }
+
+  //função que reseta o ranking, apagando o conteúdo do arquivo ranking.json
+  private static void resetarRanking(Path rankingPath) {
+    try {
+      saveRanking(rankingPath, new ArrayList<>());
+      System.out.println("Ranking resetado com sucesso.");
+    } catch (Exception e) {
+      System.out.println("Falha ao resetar o ranking: " + e.getMessage());
+    }
+  }
+
+  public static void main(String[] args) {
+    // Gerador aleatório usado para posicionar passageiros e asteroides
+    Random random = new Random();
+
+    // Caminho para o arquivo que persiste o ranking de pontuações
+    Path rankingPath = Paths.get("ranking.json");
+    // Carrega ranking existente (se houver) para exibir e possivelmente atualizar
+    List<RankingEntry> ranking = loadRanking(rankingPath);
+
+    // Scanner para leitura de entradas do usuário via console
+    Scanner scanner = new Scanner(System.in);
+    System.out.print("Digite o nome do piloto: ");
+    String pilotoNome = scanner.nextLine().trim();
+    if (pilotoNome.isEmpty()) {
+      pilotoNome = "Piloto Anônimo";
+    }
+
+    //opções do menu
+    boolean executando = true;
+    while (executando) {
+      mostrarMenu();
+      int opcao = scanner.nextInt();
+      scanner.nextLine(); // Limpa o buffer do scanner
+      switch (opcao) {
+        case 1:
+          ranking = jogar(scanner, random, rankingPath, ranking, pilotoNome);
+          break;
+        case 2:
+          ranking = loadRanking(rankingPath);
+          System.out.println();
+          System.out.println("========== RANKING ==========");
+
+          if (ranking.isEmpty()) {
+            System.out.println("Nenhuma partida registrada.");
+          } else {
+            printRanking(ranking);
+          }
+          System.out.println("=============================");
+          break;
+        case 3:
+          resetarRanking(rankingPath);
+          ranking = loadRanking(rankingPath); // Recarrega o ranking após resetar
+          break;
+        case 4:
+          System.out.println("Saindo do jogo. Até a próxima!");
+          executando = false;
+          break;
+        default:
+          System.out.println("Opção inválida. Tente novamente.");
       }
     }
 
@@ -316,6 +395,7 @@ public class Main {
    * @param scanner leitor de entradas do console
    * @return `Dificuldade` escolhida
    */
+
   private static Dificuldade selecionarDificuldade(Scanner scanner) {
     while (true) {
       System.out.println("Escolha a dificuldade:");
@@ -431,9 +511,7 @@ public class Main {
       .stream()
       .filter(e -> e.getDificuldade() == dificuldade)
       .sorted(
-        Comparator
-          .comparingInt((RankingEntry e) -> e.getPontuacao())
-          .reversed()
+        Comparator.comparingInt((RankingEntry e) -> e.getPontuacao()).reversed()
       )
       .limit(5)
       .collect(Collectors.toList());
@@ -549,9 +627,17 @@ public class Main {
    */
   private static String simboloCompativel(String emoji, String fallback) {
     String charset = Charset.defaultCharset().name().toLowerCase(Locale.ROOT);
-    String stdoutCharset = System.getProperty("sun.stdout.encoding", "").toLowerCase(Locale.ROOT);
-    String lang = System.getenv().getOrDefault("LANG", "").toLowerCase(Locale.ROOT);
-    boolean utfSuportado = charset.contains("utf") || stdoutCharset.contains("utf") || lang.contains("utf");
+    String stdoutCharset = System.getProperty(
+      "sun.stdout.encoding",
+      ""
+    ).toLowerCase(Locale.ROOT);
+    String lang = System.getenv()
+      .getOrDefault("LANG", "")
+      .toLowerCase(Locale.ROOT);
+    boolean utfSuportado =
+      charset.contains("utf") ||
+      stdoutCharset.contains("utf") ||
+      lang.contains("utf");
     return utfSuportado ? emoji : fallback;
   }
 
@@ -583,6 +669,7 @@ public class Main {
     String asteroideIcone = simboloCompativel("ㅤ☄️", "X");
     String inimigoIcone = simboloCompativel("👾", "I");
     String vazioIcone = simboloCompativel("·", ".");
+    String pousoIcone = simboloCompativel(vazioIcone, "L");
 
     System.out.println();
     System.out.printf(
@@ -609,6 +696,8 @@ public class Main {
         String symbol = vazioIcone;
         if (missao.getNave().getX() == x && missao.getNave().getY() == y) {
           symbol = naveIcone;
+        } else if (x == 0 && y == 0) {
+          symbol = pousoIcone;
         } else {
           // obstáculo é desenhado antes do passageiro: representa perigo e não
           // aparece em nenhuma outra parte da tela, então não pode ficar oculto.
